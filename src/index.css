@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* استيراد خط يدعم اللغة العربية بشكل جيد */
+/* 'Noto Sans Arabic' هو خط ممتاز من Google Fonts */
+body {
+  font-family: 'Noto Sans Arabic', sans-serif;
+  /* تعيين الاتجاه الافتراضي للموقع من اليمين إلى اليسار (RTL) */
+  direction: rtl;
+}
