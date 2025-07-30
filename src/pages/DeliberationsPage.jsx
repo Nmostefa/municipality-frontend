@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
 
 function DeliberationsPage() {
+  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
+  const { API_BASE_URL } = useOutletContext();
   const [deliberations, setDeliberations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,9 +12,11 @@ function DeliberationsPage() {
   useEffect(() => {
     const fetchDeliberations = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/deliberations');
+        setLoading(true);
+        setError(null); // مسح أي أخطاء سابقة
+        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        const response = await axios.get(`${API_BASE_URL}/api/deliberations`);
         setDeliberations(response.data);
-        setError(null);
       } catch (err) {
         console.error('Error fetching deliberations:', err);
         setError('حدث خطأ أثناء جلب المداولات. الرجاء المحاولة لاحقًا.');
@@ -20,8 +25,11 @@ function DeliberationsPage() {
       }
     };
 
-    fetchDeliberations();
-  }, []);
+    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
+    if (API_BASE_URL) {
+      fetchDeliberations();
+    }
+  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
 
   if (loading) {
     return (

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios'; // استيراد مكتبة axios
+import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
 
 function DepartmentsPage() {
+  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
+  const { API_BASE_URL } = useOutletContext();
   const [departments, setDepartments] = useState([]); // لحفظ قائمة الأقسام
   const [loading, setLoading] = useState(true); // لمعرفة ما إذا كانت البيانات قيد التحميل
   const [error, setError] = useState(null); // لحفظ أي أخطاء تحدث أثناء الجلب
@@ -10,10 +13,11 @@ function DepartmentsPage() {
     // دالة لجلب الأقسام من الواجهة الخلفية
     const fetchDepartments = async () => {
       try {
-        // قم بتغيير هذا الرابط إذا كانت الواجهة الخلفية تعمل على منفذ أو عنوان IP مختلف
-        const response = await axios.get('http://127.0.0.1:5000/api/departments');
-        setDepartments(response.data); // حفظ البيانات المستلمة
+        setLoading(true);
         setError(null); // مسح أي أخطاء سابقة
+        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        const response = await axios.get(`${API_BASE_URL}/api/departments`);
+        setDepartments(response.data); // حفظ البيانات المستلمة
       } catch (err) {
         console.error('Error fetching departments:', err);
         setError('حدث خطأ أثناء جلب الأقسام. الرجاء المحاولة لاحقًا.'); // تعيين رسالة خطأ
@@ -22,8 +26,11 @@ function DepartmentsPage() {
       }
     };
 
-    fetchDepartments(); // استدعاء الدالة عند تحميل المكون
-  }, []); // [] يعني أن useEffect سيتم تشغيله مرة واحدة فقط عند تحميل المكون
+    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
+    if (API_BASE_URL) {
+      fetchDepartments(); // استدعاء الدالة عند تحميل المكون
+    }
+  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
 
   if (loading) {
     return (

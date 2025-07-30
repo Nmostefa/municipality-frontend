@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
 
 function ProjectsPage() {
+  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
+  const { API_BASE_URL } = useOutletContext();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,9 +12,11 @@ function ProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/projects');
+        setLoading(true);
+        setError(null); // مسح أي أخطاء سابقة
+        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        const response = await axios.get(`${API_BASE_URL}/api/projects`);
         setProjects(response.data);
-        setError(null);
       } catch (err) {
         console.error('Error fetching projects:', err);
         setError('حدث خطأ أثناء جلب المشاريع. الرجاء المحاولة لاحقًا.');
@@ -20,8 +25,11 @@ function ProjectsPage() {
       }
     };
 
-    fetchProjects();
-  }, []);
+    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
+    if (API_BASE_URL) {
+      fetchProjects();
+    }
+  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
 
   if (loading) {
     return (

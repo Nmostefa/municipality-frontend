@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
 
 function AnnouncementsPage() {
+  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
+  const { API_BASE_URL } = useOutletContext();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,9 +12,11 @@ function AnnouncementsPage() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/announcements');
+        setLoading(true);
+        setError(null); // مسح أي أخطاء سابقة
+        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        const response = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(response.data);
-        setError(null);
       } catch (err) {
         console.error('Error fetching announcements:', err);
         setError('حدث خطأ أثناء جلب الإعلانات. الرجاء المحاولة لاحقًا.');
@@ -20,19 +25,20 @@ function AnnouncementsPage() {
       }
     };
 
-    fetchAnnouncements();
-  }, []);
+    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
+    if (API_BASE_URL) {
+      fetchAnnouncements();
+    }
+  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
 
   const formatDate = (dateString) => {
     if (!dateString) return 'غير محدد';
     const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    // هنا كان يمكن أن يكون هناك خطأ إذا كان dateString لا يمكن تحويله إلى Date
-    // إضافة try-catch أو تحقق إضافي لمرونة أفضل
     try {
-        return new Date(dateString).toLocaleDateString('ar-DZ', options);
+      return new Date(dateString).toLocaleDateString('ar-DZ', options);
     } catch (e) {
-        console.error("Invalid date string:", dateString, e);
-        return 'تاريخ غير صالح';
+      console.error("Invalid date string:", dateString, e);
+      return 'تاريخ غير صالح';
     }
   };
 

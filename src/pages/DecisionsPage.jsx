@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
 
 const DecisionsPage = () => {
+  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
+  const { API_BASE_URL } = useOutletContext();
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,18 +12,24 @@ const DecisionsPage = () => {
   useEffect(() => {
     const fetchDecisions = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/decisions');
+        setLoading(true);
+        setError(null); // مسح أي أخطاء سابقة
+        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        const response = await axios.get(`${API_BASE_URL}/api/decisions`);
         setDecisions(response.data);
       } catch (err) {
-        setError('فشل في جلب القرارات. يرجى التأكد من تشغيل الواجهة الخلفية.');
         console.error('Error fetching decisions:', err);
+        setError('فشل في جلب القرارات. يرجى التأكد من تشغيل الواجهة الخلفية.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDecisions();
-  }, []);
+    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
+    if (API_BASE_URL) {
+      fetchDecisions();
+    }
+  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
 
   if (loading) {
     return <div className="text-center py-8 text-gray-700">جاري تحميل القرارات...</div>;
