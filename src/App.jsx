@@ -1,20 +1,28 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useOutletContext } from 'react-router-dom'; // استيراد Outlet و useOutletContext
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import HomePage from './pages/HomePage';
-import AnnouncementsPage from './pages/AnnouncementsPage';
-import ProjectsPage from './pages/ProjectsPage';
-import DeliberationsPage from './pages/DeliberationsPage';
-import DecisionsPage from './pages/DecisionsPage';
-import DepartmentsPage from './pages/DepartmentsPage'; // تم التعديل هنا: استخدام DepartmentsPage بصيغة الجمع
-import ServicesPage from './pages/ServicesPage';
-import ContactUs from './components/ContactUs';
 import Footer from './components/Footer';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const API_BASE_URL = 'https://dirah-municipality-backend.onrender.com';
+  // بما أن API_BASE_URL لم يعد معرفاً مباشرة هنا، يمكننا جلبه من السياق إذا لزم الأمر
+  // ولكن في هذه الحالة، سنمرره مباشرة من main.jsx إلى Outlet
+  // ثم نستخدم useOutletContext في الصفحات الفرعية
+  
+  // جلب API_BASE_URL من السياق الذي تم تمريره من RouterProvider في main.jsx
+  // لا، هذا غير صحيح. API_BASE_URL يجب أن يمرر إلى Outlet context من App نفسه
+  // أو أن يتم تعريفه مرة واحدة في main.jsx وتمريره كـ prop إلى App
+  // الحل الأبسط هو تعريفه في main.jsx وتمريره إلى App كـ prop
+  // ثم App يمرره إلى Outlet context
+
+  // بما أننا سنمرر API_BASE_URL كـ prop من main.jsx إلى App،
+  // سنحتاج إلى استقباله هنا
+  // لا، الأسهل هو تعريف API_BASE_URL في App.jsx نفسه لأنه يستخدم في جلب siteSettings
+  // ثم يمرر إلى Outlet context.
+  // سنعيد API_BASE_URL إلى App.jsx لأنه يستخدم لجلب siteSettings
+
+  const API_BASE_URL = 'https://dirah-municipality-backend.onrender.com'; // أبقي هذا هنا
 
   const [siteSettings, setSiteSettings] = useState([]);
 
@@ -43,59 +51,19 @@ function App() {
     }
   }, [API_BASE_URL]);
 
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: (
-        <div className="flex flex-col min-h-screen" dir="rtl">
-          <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} siteSettings={siteSettings} />
-          <div className="flex flex-1">
-            <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <main className="flex-1 p-4 overflow-y-auto">
-              <Outlet context={{ API_BASE_URL }} />
-            </main>
-          </div>
-          <Footer siteSettings={siteSettings} />
-        </div>
-      ),
-      children: [
-        {
-          index: true,
-          element: <HomePage />,
-        },
-        {
-          path: "announcements",
-          element: <AnnouncementsPage />,
-        },
-        {
-          path: "projects",
-          element: <ProjectsPage />,
-        },
-        {
-          path: "deliberations",
-          element: <DeliberationsPage />,
-        },
-        {
-          path: "decisions",
-          element: <DecisionsPage />,
-        },
-        {
-          path: "departments",
-          element: <DepartmentsPage />, // تم التعديل هنا: استخدام DepartmentsPage بصيغة الجمع
-        },
-        {
-          path: "services",
-          element: <ServicesPage />,
-        },
-        {
-          path: "contact",
-          element: <ContactUs />,
-        },
-      ],
-    },
-  ]);
-
-  return <RouterProvider router={router} />;
+  return (
+    <div className="flex flex-col min-h-screen" dir="rtl">
+      <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} siteSettings={siteSettings} />
+      <div className="flex flex-1">
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <main className="flex-1 p-4 overflow-y-auto">
+          {/* تمرير API_BASE_URL عبر سياق Outlet ليكون متاحاً لجميع الصفحات الفرعية */}
+          <Outlet context={{ API_BASE_URL }} />
+        </main>
+      </div>
+      <Footer siteSettings={siteSettings} />
+    </div>
+  );
 }
 
 export default App;

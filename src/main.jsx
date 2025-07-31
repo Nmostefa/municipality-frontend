@@ -1,61 +1,65 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import ProjectsPage from './pages/ProjectsPage';
+import DeliberationsPage from './pages/DeliberationsPage';
+import DecisionsPage from './pages/DecisionsPage';
+import DepartmentsPage from './pages/DepartmentsPage';
+import ServicesPage from './pages/ServicesPage';
+import ContactUs from './components/ContactUs';
 
-// استيراد الصفحات الخاصة بك (بافتراض أنها في مجلد pages)
-import HomePage from './pages/HomePage.jsx';
-import DepartmentsPage from './pages/DepartmentsPage.jsx';
-import ProjectsPage from './pages/ProjectsPage.jsx';
-import AnnouncementsPage from './pages/AnnouncementsPage.jsx';
-import DeliberationsPage from './pages/DeliberationsPage.jsx';
-import DecisionsPage from './pages/DecisionsPage.jsx';
-import ContactUsPage from './components/ContactUs.jsx'; // <--- أضف هذا الاستيراد هنا (تأكد من المسار)
+// هذا هو عنوان الـ API الجديد للواجهة الخلفية المنشورة على Render.com
+const API_BASE_URL = 'https://dirah-municipality-backend.onrender.com';
 
+// تعريف الـ router هنا في أعلى مستوى
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <App />, // App هو الآن مكون التخطيط الرئيسي
+    path: "/",
+    element: <App />, // App هو المكون الرئيسي الذي يحتوي على Header/Sidebar/Footer و Outlet
     children: [
       {
         index: true,
         element: <HomePage />,
       },
       {
-        path: 'departments',
-        element: <DepartmentsPage />,
-      },
-      {
-        path: 'projects',
-        element: <ProjectsPage />,
-      },
-      {
-        path: 'announcements',
+        path: "announcements",
         element: <AnnouncementsPage />,
       },
       {
-        path: 'deliberations',
+        path: "projects",
+        element: <ProjectsPage />,
+      },
+      {
+        path: "deliberations",
         element: <DeliberationsPage />,
       },
       {
-        path: 'decisions',
+        path: "decisions",
         element: <DecisionsPage />,
       },
       {
-        path: 'contact', // <--- أضف هذا المسار هنا لصفحة اتصل بنا
-        element: <ContactUsPage />,
+        path: "departments",
+        element: <DepartmentsPage />,
       },
-      // هنا يمكنك إضافة مسارات أخرى لصفحاتك
+      {
+        path: "services",
+        element: <ServicesPage />,
+      },
+      {
+        path: "contact",
+        element: <ContactUs />,
+      },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    {/* تمرير API_BASE_URL كـ prop إلى App */}
     <RouterProvider router={router} />
   </React.StrictMode>,
 );
