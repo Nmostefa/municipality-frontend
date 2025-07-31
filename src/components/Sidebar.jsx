@@ -5,6 +5,11 @@ import { Link } from 'react-router-dom';
 function Sidebar({ isOpen, toggleSidebar }) {
   return (
     // استخدام Tailwind CSS لضبط العرض والموقع بناءً على حالة isOpen
+    // z-40 لضمان أنه يظهر فوق المحتوى
+    // transform و transition لإنشاء تأثير حركة سلس
+    // translate-x-full لإخفائه خارج الشاشة على اليمين
+    // translate-x-0 لإظهاره
+    // md:static و md:translate-x-0 لجعله جزءاً من تدفق المستند على الشاشات الكبيرة
     <aside
       className={`
         fixed inset-y-0 right-0 z-40 w-64 bg-blue-800 text-white p-6 shadow-lg 
@@ -13,7 +18,7 @@ function Sidebar({ isOpen, toggleSidebar }) {
         md:translate-x-0 md:static md:min-h-screen
       `}
     >
-      {/* زر إغلاق الشريط الجانبي على الجوال */}
+      {/* زر إغلاق الشريط الجانبي على الجوال (يظهر فقط على الشاشات الصغيرة) */}
       <button
         onClick={toggleSidebar}
         className="absolute top-4 left-4 text-white md:hidden focus:outline-none"
@@ -73,7 +78,7 @@ function Sidebar({ isOpen, toggleSidebar }) {
           القرارات
         </Link>
         <Link 
-          to="/services" // إضافة رابط الخدمات
+          to="/services" 
           className="block py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 text-lg text-right"
           onClick={toggleSidebar}
         >

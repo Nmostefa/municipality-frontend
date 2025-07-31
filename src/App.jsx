@@ -42,9 +42,9 @@ function App() {
         {/* الشريط الجانبي */}
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         
-        {/* المحتوى الرئيسي: padding-right لترك مساحة للشريط الجانبي */}
+        {/* المحتوى الرئيسي */}
         {/* md:pr-64 يضيف هامشاً أيمن بحجم الشريط الجانبي على الشاشات الكبيرة */}
-        {/* على الشاشات الصغيرة، سيكون الشريط الجانبي متراكباً (overlay) */}
+        {/* على الشاشات الصغيرة، الشريط الجانبي سيكون متراكباً، لذلك لا يوجد padding هنا */}
         <main className="flex-1 p-4 overflow-y-auto md:pr-64"> 
           <Outlet context={{ API_BASE_URL }} />
         </main>
