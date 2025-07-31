@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// المكون يستقبل toggleSidebar كـ prop من App.jsx
 function Header({ toggleSidebar }) {
   return (
-    <header className="bg-blue-700 text-white p-4 shadow-md z-30 relative">
+    <header className="bg-blue-700 text-white p-4 shadow-md z-30 relative"> {/* z-30 for layering above sidebar */}
       <div className="container mx-auto flex justify-between items-center">
         {/* زر تبديل الشريط الجانبي (يظهر فقط على الشاشات الصغيرة) */}
         <button
@@ -21,16 +22,8 @@ function Header({ toggleSidebar }) {
           بلدية ديرة
         </Link>
         
-        {/* رابط لوحة التحكم (يظهر على الشاشات الكبيرة) */}
-        {/* نستخدم <a></a> tags بدلاً من <Link> لأنها رابط خارجي (إلى الواجهة الخلفية) */}
-        <a 
-          href="https://dirah-municipality-backend.onrender.com/admin" 
-          target="_blank" // لفتح الرابط في نافذة/علامة تبويب جديدة
-          rel="noopener noreferrer" // ممارسات أمنية جيدة عند استخدام target="_blank"
-          className="hidden md:block bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg transition duration-300 text-lg"
-        >
-          لوحة التحكم
-        </a>
+        {/* عنصر وهمي للمحاذاة على الشاشات الكبيرة إذا لزم الأمر */}
+        <div className="hidden md:block w-8"></div>
       </div>
     </header>
   );
