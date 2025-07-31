@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
+import { useOutletContext } from 'react-router-dom';
 
 function ServicesPage() {
-  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
   const { API_BASE_URL } = useOutletContext();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,23 +12,26 @@ function ServicesPage() {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        setError(null); // مسح أي أخطاء سابقة
-        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        setError(null); // مهم: إعادة تعيين الخطأ إلى null في بداية كل محاولة جلب
+
+        console.log("ServicesPage: Attempting to fetch services from:", `${API_BASE_URL}/api/services`);
         const response = await axios.get(`${API_BASE_URL}/api/services`);
+        console.log("ServicesPage: Successfully fetched services data:", response.data); // تسجيل البيانات المستلمة
+
         setServices(response.data);
+        setError(null); // التأكد من مسح الخطأ بعد النجاح
       } catch (err) {
-        console.error('Error fetching services:', err);
+        console.error('ServicesPage: Error fetching services:', err);
         setError('حدث خطأ أثناء جلب الخدمات. الرجاء المحاولة لاحقًا.');
       } finally {
         setLoading(false);
       }
     };
 
-    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
     if (API_BASE_URL) {
       fetchServices();
     }
-  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
+  }, [API_BASE_URL]);
 
   if (loading) {
     return (

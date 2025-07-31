@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 
 function ContactUs() {
+  const { API_BASE_URL } = useOutletContext();
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -8,27 +10,38 @@ function ContactUs() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/settings');
+        setLoading(true);
+        setError(null); // مهم: إعادة تعيين الخطأ إلى null في بداية كل محاولة جلب
+
+        console.log("ContactUs: Attempting to fetch settings from:", `${API_BASE_URL}/api/settings`);
+        const response = await fetch(`${API_BASE_URL}/api/settings`);
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text(); // حاول قراءة نص الخطأ
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
+        
         const data = await response.json();
+        console.log("ContactUs: Successfully fetched settings data:", data); // تسجيل البيانات المستلمة
 
         const formattedSettings = {};
         data.forEach(setting => {
           formattedSettings[setting.setting_name] = setting.setting_value;
         });
         setSettings(formattedSettings);
+        setError(null); // التأكد من مسح الخطأ بعد النجاح
       } catch (error) {
-        console.error("Error fetching contact settings:", error);
+        console.error("ContactUs: Error fetching contact settings:", error);
         setError("فشل في تحميل معلومات الاتصال.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSettings();
-  }, []);
+    if (API_BASE_URL) {
+      fetchSettings();
+    }
+  }, [API_BASE_URL]);
 
   if (loading) {
     return (
@@ -39,6 +52,7 @@ function ContactUs() {
     );
   }
 
+  // إذا كان هناك خطأ، اعرض رسالة الخطأ
   if (error) {
     return (
       <div className="container mx-auto p-8 text-center min-h-screen">
@@ -48,6 +62,7 @@ function ContactUs() {
     );
   }
 
+  // إذا لم يكن هناك تحميل ولا أخطاء، اعرض البيانات
   return (
     <div className="container mx-auto p-8 min-h-screen">
       <h2 className="text-4xl font-bold text-blue-800 text-center mb-8">اتصل بنا</h2>
@@ -68,33 +83,11 @@ function ContactUs() {
           <h3 className="text-2xl font-semibold text-blue-700 mb-4">البريد الإلكتروني</h3>
           <p className="text-gray-800">{settings.email || 'غير متوفر'}</p>
         </div>
-         <div className="bg-white p-6 rounded-lg shadow-lg text-center col-span-1 md:col-span-2 lg:col-span-3">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center col-span-1 md:col-span-2 lg:col-span-3">
           <h3 className="text-2xl font-semibold text-blue-700 mb-4">ساعات العمل</h3>
           <p className="text-gray-800">{settings.working_hours || 'غير متوفر'}</p>
         </div>
       </div>
-
-      {/* يمكن إضافة نموذج اتصال هنا لاحقًا */}
-      {/*
-      <div className="mt-16 bg-white p-8 rounded-lg shadow-lg">
-        <h3 className="text-3xl font-bold text-blue-800 text-center mb-6">أرسل لنا رسالة</h3>
-        <form className="max-w-xl mx-auto space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-lg font-medium text-gray-700">الاسم الكامل</label>
-            <input type="text" id="name" name="name" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-lg font-medium text-gray-700">البريد الإلكتروني</label>
-            <input type="email" id="email" name="email" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-          <div>
-            <label htmlFor="message" className="block text-lg font-medium text-gray-700">الرسالة</label>
-            <textarea id="message" name="message" rows="5" className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
-          </div>
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">إرسال الرسالة</button>
-        </form>
-      </div>
-      */}
     </div>
   );
 }
