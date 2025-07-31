@@ -1,16 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom'; // لتصيير المسارات الفرعية
-import Header from './components/Header.jsx';
-import Footer from './components/Footer.jsx';
-import Sidebar from './components/Sidebar.jsx'; // تأكد من المسار الصحيح للـ Sidebar
-
-// هذا هو عنوان الـ API الجديد للواجهة الخلفية المنشورة على Render.com
-// تأكد من تحديث هذا الرابط إذا تغير عنوان الواجهة الخلفية
-const API_BASE_URL = 'https://dirah-municipality-backend.onrender.com';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import HomePage from './pages/HomePage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import ProjectsPage from './pages/ProjectsPage';
+import DeliberationsPage from './pages/DeliberationsPage';
+import DecisionsPage from './pages/DecisionsPage';
+import DepartmentsPage from './pages/DepartmentsPage'; // تم التعديل هنا: استخدام DepartmentsPage بصيغة الجمع
+import ServicesPage from './pages/ServicesPage';
+import ContactUs from './components/ContactUs';
+import Footer from './components/Footer';
 
 function App() {
-  // يمكنك هنا جلب إعدادات الموقع إذا كنت تحتاجها في Header/Footer
-  // أو يمكنك جلبها مباشرة في المكونات التي تحتاجها
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const API_BASE_URL = 'https://dirah-municipality-backend.onrender.com';
+
   const [siteSettings, setSiteSettings] = useState([]);
 
   useEffect(() => {
@@ -23,8 +28,7 @@ function App() {
         const data = await response.json();
         setSiteSettings(data);
       } catch (error) {
-        console.error("Failed to fetch site settings:", error);
-        // يمكنك تعيين قيم افتراضية أو عرض رسالة خطأ للمستخدم
+        console.error("Failed to fetch site settings in App.jsx:", error);
         setSiteSettings([
           { setting_name: "phone_number", setting_value: "N/A" },
           { setting_name: "email", setting_value: "N/A" },
@@ -34,27 +38,64 @@ function App() {
       }
     };
 
-    fetchSiteSettings();
-  }, []); // يتم تشغيله مرة واحدة عند تحميل المكون
+    if (API_BASE_URL) {
+      fetchSiteSettings();
+    }
+  }, [API_BASE_URL]);
 
-  return (
-    <div className="flex flex-col min-h-screen" dir="rtl">
-      {/* تمرير إعدادات الموقع إلى الـ Header والـ Footer (إذا كانا يحتاجانها) */}
-      <Header siteSettings={siteSettings} />
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: (
+        <div className="flex flex-col min-h-screen" dir="rtl">
+          <Header toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} siteSettings={siteSettings} />
+          <div className="flex flex-1">
+            <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+            <main className="flex-1 p-4 overflow-y-auto">
+              <Outlet context={{ API_BASE_URL }} />
+            </main>
+          </div>
+          <Footer siteSettings={siteSettings} />
+        </div>
+      ),
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        {
+          path: "announcements",
+          element: <AnnouncementsPage />,
+        },
+        {
+          path: "projects",
+          element: <ProjectsPage />,
+        },
+        {
+          path: "deliberations",
+          element: <DeliberationsPage />,
+        },
+        {
+          path: "decisions",
+          element: <DecisionsPage />,
+        },
+        {
+          path: "departments",
+          element: <DepartmentsPage />, // تم التعديل هنا: استخدام DepartmentsPage بصيغة الجمع
+        },
+        {
+          path: "services",
+          element: <ServicesPage />,
+        },
+        {
+          path: "contact",
+          element: <ContactUs />,
+        },
+      ],
+    },
+  ]);
 
-      <div className="flex flex-grow">
-        <Sidebar />
-
-        <main className="flex-grow mr-64 p-4">
-          {/* Outlet لتصيير المكونات الفرعية (الصفحات) بناءً على المسار */}
-          {/* نمرر API_BASE_URL عبر context ليكون متاحاً لجميع الصفحات الفرعية */}
-          <Outlet context={{ API_BASE_URL }} />
-        </main>
-      </div>
-
-      <Footer siteSettings={siteSettings} />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
