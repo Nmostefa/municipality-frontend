@@ -1,89 +1,284 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useOutletContext } from 'react-router-dom';
-import { STATIC_SERVICES, CATEGORIES } from '../constants'; // تأكد أن هذه الملفات موجودة في مجلد 'constants'
+// لا نحتاج لاستيراد STATIC_SERVICES و CATEGORIES من ملف خارجي بعد الآن
+// لأنهما معرفان مباشرة داخل هذا المكون لضمان وجود البيانات.
+// import { STATIC_SERVICES, CATEGORIES } from '../constants'; // (معلق)
 
-// توحيد أسماء الفئات لتطابق الفئات المعرفة في CATEGORIES
-// هذا يضمن أن يتم عرض الفئات بشكل متسق سواء كانت قادمة من API أو من البيانات الثابتة.
+// تعريف الخدمات الثابتة (كخيار احتياطي) مباشرة داخل هذا المكون
+const STATIC_SERVICES = [
+  {
+    id: 1, // معرفات فريدة للخدمات
+    name: 'إصدار شهادات الميلاد، الزواج، والوفاة',
+    description: 'إجراءات مبسطة لإصدار وتجديد الوثائق المدنية الأساسية.',
+    category: 'إدارية',
+    required_documents: 'بطاقة تعريف، شهادة ميلاد الأبوين',
+    steps: '1. تقديم طلب في مصلحة الحالة المدنية 2. التحقق من الوثائق 3. استلام الشهادة',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 2,
+    name: 'تسليم شهادات الإقامة، الحالة العائلية، والجنسية',
+    description: 'تسهيل الحصول على الوثائق التي تثبت الإقامة والحالة الشخصية والجنسية.',
+    category: 'إدارية',
+    required_documents: 'بطاقة تعريف، فاتورة كهرباء/غاز (للإقامة)، وثائق عائلية',
+    steps: '1. تعبئة النموذج 2. تقديم الوثائق 3. استلام الشهادة',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 3,
+    name: 'تحرير وعرض عقود الزواج',
+    description: 'تقديم الخدمات المتعلقة بإعداد وتوثيق عقود الزواج الشرعية والرسمية.',
+    category: 'إدارية',
+    required_documents: 'شهادة ميلاد، بطاقة تعريف، شهادة طبية، شهود',
+    steps: '1. حجز موعد 2. تقديم الوثائق 3. تحرير العقد',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 4,
+    name: 'التصديق على الوثائق (الإمضاء والنسخ المطابقة للأصل)',
+    description: 'خدمات التصديق على التوقيعات ومطابقة النسخ لأصول الوثائق الرسمية.',
+    category: 'إدارية',
+    required_documents: 'الوثيقة الأصلية والنسخة المراد التصديق عليها، بطاقة تعريف',
+    steps: '1. تقديم الوثيقة 2. التحقق 3. التصديق',
+    fees: 100, // مثال على رسوم بسيطة
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 5,
+    name: 'تسجيل المواليد والوفيات',
+    description: 'خدمة تسجيل الأحداث الحيوية لضمان حقوق المواطنين وتحديث السجلات.',
+    category: 'إدارية',
+    required_documents: 'شهادة طبية للميلاد/الوفاة، دفتر عائلي',
+    steps: '1. التبليغ عن الحدث 2. تقديم الوثائق 3. التسجيل في السجلات',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 6,
+    name: 'استخراج رخص البناء، الهدم، والتقسيم',
+    description: 'إصدار التراخيص اللازمة للمشاريع العمرانية والتخطيطية لضمان الامتثال للقوانين.',
+    category: 'إدارية',
+    required_documents: 'مخطط هندسي، سند ملكية، دراسة تربة',
+    steps: '1. إيداع الملف 2. دراسة الطلب 3. إصدار الرخصة',
+    fees: 5000, // مثال على رسوم
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 7,
+    name: 'تقديم الإعانات الاجتماعية للفئات المحتاجة',
+    description: 'برامج دعم مالي وعيني لمساعدة الأسر والفئات الأكثر ضعفاً في المجتمع.',
+    category: 'اجتماعية',
+    required_documents: 'ملف اجتماعي، شهادة عدم العمل، شهادة إقامة',
+    steps: '1. تقديم ملف الطلب 2. دراسة الحالة 3. صرف الإعانة',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 8,
+    name: 'منح المساعدات المدرسية للتلاميذ',
+    description: 'توفير الدعم المالي واللوازم المدرسية للطلاب لضمان استمراريتهم التعليمية.',
+    category: 'اجتماعية',
+    required_documents: 'شهادة تسجيل مدرسي، كشف دخل الأسرة',
+    steps: '1. إيداع طلب 2. دراسة الحالة 3. تقديم المساعدة',
+    fees: 0,
+    working_hours: 'خلال الموسم الدراسي: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 9,
+    name: 'دعم الأنشطة الثقافية والفنية',
+    description: 'تشجيع ودعم المبادرات والفعاليات الثقافية والفنية المحلية.',
+    category: 'اجتماعية',
+    required_documents: 'برنامج النشاط، طلب دعم، ميزانية تقديرية',
+    steps: '1. تقديم المشروع 2. دراسة الدعم 3. تنفيذ النشاط',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 10,
+    name: 'تنظيم الأسواق الجوارية والمناسبات الوطنية',
+    description: 'تنظيم وتنسيق الأسواق المحلية والمساهمة في إحياء المناسبات الوطنية والدينية.',
+    category: 'اجتماعية',
+    required_documents: 'طلب تنظيم، ترخيص أمني',
+    steps: '1. تقديم الطلب 2. دراسة الموافقة 3. التنظيم',
+    fees: 0,
+    working_hours: 'حسب نوع السوق أو المناسبة',
+  },
+  {
+    id: 11,
+    name: 'صيانة وإصلاح الطرقات والأرصفة',
+    description: 'تحسين وصيانة شبكة الطرق والأرصفة داخل حدود البلدية لضمان سلامة وسلاسة حركة المرور.',
+    category: 'تنموية',
+    required_documents: 'تبليغ عن ضرر (إذا كان مواطن)، تقرير هندسي',
+    steps: '1. تحديد المناطق المتضررة 2. إعداد خطة الصيانة 3. التنفيذ',
+    fees: 0,
+    working_hours: 'حسب برنامج العمل',
+  },
+  {
+    id: 12,
+    name: 'إنجاز وتوسيع الإنارة العمومية',
+    description: 'تركيب وصيانة وتوسيع شبكة الإنارة العمومية لضمان الإضاءة الكافية في الشوارع والأحياء.',
+    category: 'تنموية',
+    required_documents: 'طلب توسيع (من مواطن)، دراسة تقنية',
+    steps: '1. دراسة الحاجة 2. إعداد المشروع 3. التنفيذ',
+    fees: 0,
+    working_hours: 'حسب برنامج العمل',
+  },
+  {
+    id: 13,
+    name: 'تهيئة المساحات الخضراء والحدائق العمومية',
+    description: 'تصميم وإنشاء وصيانة المساحات الخضراء والحدائق لتعزيز البيئة الحضرية والترفيه.',
+    category: 'تنموية',
+    required_documents: 'مقترح مشروع، دراسة بيئية',
+    steps: '1. وضع المخطط 2. التجهيز 3. الصيانة الدورية',
+    fees: 0,
+    working_hours: 'حسب برنامج العمل',
+  },
+  {
+    id: 14,
+    name: 'المساهمة في برامج السكن الاجتماعي والريفي',
+    description: 'دعم ومتابعة برامج توفير السكن للفئات ذات الدخل المحدود في المناطق الحضرية والريفية.',
+    category: 'تنموية',
+    required_documents: 'ملف طلب سكن، شهادة دخل',
+    steps: '1. استقبال الطلبات 2. دراسة الملفات 3. التوزيع',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 15,
+    name: 'جمع النفايات وتنظيم حملات النظافة',
+    description: 'تنظيم دورات جمع النفايات والتوعية بأهمية النظافة والمشاركة في حملات تنظيف شاملة.',
+    category: 'صحة/نظافة',
+    required_documents: 'لا يوجد',
+    steps: '1. تحديد مسارات الجمع 2. التنفيذ اليومي 3. حملات دورية',
+    fees: 0,
+    working_hours: 'يومي',
+  },
+  {
+    id: 16,
+    name: 'حملات الوقاية الصحية والتوعية',
+    description: 'تنظيم ورش عمل وحملات توعية حول الصحة العامة والنظافة والوقاية من الأمراض.',
+    category: 'صحة/نظافة',
+    required_documents: 'لا يوجد',
+    steps: '1. إعداد البرامج 2. التنسيق مع الشركاء 3. التنفيذ',
+    fees: 0,
+    working_hours: 'حسب برنامج الحملات',
+  },
+  {
+    id: 17,
+    name: 'تسيير المذابح البلدية ومراقبة الأسواق',
+    description: 'الإشراف على المذابح البلدية لضمان تطبيق المعايير الصحية ومراقبة جودة المنتجات في الأسواق.',
+    category: 'صحة/نظافة',
+    required_documents: 'لا يوجد',
+    steps: '1. جولات تفتيش دورية 2. تطبيق المعايير الصحية 3. معالجة المخالفات',
+    fees: 0,
+    working_hours: 'يومي',
+  },
+  {
+    id: 18,
+    name: 'تنظيم النقل الحضري بالتنسيق مع الجهات المختصة',
+    description: 'العمل على تحسين شبكة النقل العام وتسهيل حركة المواطنين داخل البلدية.',
+    category: 'أخرى',
+    required_documents: 'مقترحات من المواطنين أو شركات النقل',
+    steps: '1. دراسة الاحتياجات 2. التنسيق مع القطاعات 3. التطبيق',
+    fees: 0,
+    working_hours: 'حسب البرامج والمخططات',
+  },
+  {
+    id: 19,
+    name: 'تسهيل الإجراءات للمستثمرين المحليين',
+    description: 'تقديم الدعم الإداري والمعلوماتي للمستثمرين لتشجيع الاستثمار المحلي وتطوير الاقتصاد.',
+    category: 'أخرى',
+    required_documents: 'ملف المشروع، طلب تسهيل',
+    steps: '1. استقبال المستثمرين 2. توجيههم 3. متابعة الملفات',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً',
+  },
+  {
+    id: 20,
+    name: 'استقبال شكاوى واقتراحات المواطنين ومعالجتها',
+    description: 'منصة لتلقي الشكاوى والاقتراحات من المواطنين والعمل على معالجتها بفاعلية وشفافية.',
+    category: 'أخرى',
+    required_documents: 'لا يوجد (يفضل تفاصيل الشكوى)',
+    steps: '1. تقديم الشكوى 2. التسجيل 3. المعالجة 4. الرد على المواطن',
+    fees: 0,
+    working_hours: 'الأحد - الخميس: 8:00 صباحاً - 4:00 مساءً (أو عبر المنصات الرقمية 24/7)',
+  },
+];
+
+// تعريف الفئات التي سيتم استخدامها في أزرار التصفية
+const CATEGORIES = ['كل الخدمات', 'إدارية', 'اجتماعية', 'تنموية', 'صحة/نظافة', 'أخرى'];
+
+// توحيد أسماء الفئات لتحسين التصفية والبحث
 const normalizeCategory = (cat = '') => {
   const c = cat.toLowerCase();
-  // يمكنك إضافة المزيد من الكلمات المفتاحية هنا لتغطية حالات مختلفة
   if (c.includes('إدارية') || c.includes('admin')) return 'إدارية';
   if (c.includes('اجتماعية') || c.includes('social')) return 'اجتماعية';
   if (c.includes('تنموية') || c.includes('develop')) return 'تنموية';
   if (c.includes('صحة') || c.includes('نظافة') || c.includes('health') || c.includes('clean')) return 'صحة/نظافة';
   if (c.includes('أخرى') || c.includes('other')) return 'أخرى';
-  return cat || 'أخرى'; // إذا لم تتطابق أي فئة، استخدم الفئة الأصلية أو "أخرى" كافتراضي
+  return cat || 'أخرى';
 };
 
 function ServicesPage() {
-  // جلب API_BASE_URL من سياق المخرج (Outlet Context) الذي تم توفيره بواسطة App.jsx
-  // استخدام || {} لضمان عدم وجود خطأ إذا كان السياق غير موجود بعد
-  const { API_BASE_URL } = useOutletContext() || {};
-  const [services, setServices] = useState([]); // لتخزين الخدمات التي تم جلبها من API
-  const [loading, setLoading] = useState(true); // حالة التحميل (لإظهار مؤشر التحميل)
-  const [error, setError] = useState(null); // لتخزين أي أخطاء تحدث أثناء الجلب
-  const [search, setSearch] = useState(''); // لتخزين نص البحث المدخل من قبل المستخدم
-  const [activeCategory, setActiveCategory] = useState('كل الخدمات'); // لتخزين الفئة النشطة المختارة
+  const { API_BASE_URL } = useOutletContext() || {}; // التأكد من التعامل مع السياق بشكل آمن
+  const [services, setServices] = useState([]); // الخدمات التي يتم جلبها من API
+  const [loading, setLoading] = useState(true); // حالة التحميل
+  const [error, setError] = useState(null); // حالة الخطأ
+  const [search, setSearch] = useState(''); // نص البحث
+  const [activeCategory, setActiveCategory] = useState('كل الخدمات'); // الفئة النشطة
 
   useEffect(() => {
-    // إذا لم يكن API_BASE_URL متاحًا، نعتبر التحميل منتهياً
-    // ويمكننا عرض رسالة خطأ أو ببساطة استخدام الخدمات الثابتة كبديل.
+    // إذا لم يكن API_BASE_URL متاحًا، نكتفي بالبيانات الثابتة
     if (!API_BASE_URL) {
       setLoading(false);
-      // يمكنك إلغاء التعليق عن السطر التالي إذا أردت عرض رسالة خطأ صريحة
-      // setError('عنوان URL لواجهة برمجة التطبيقات غير متوفر. سيتم عرض الخدمات الاحتياطية.');
-      return; // توقف عن التنفيذ إذا لم يكن API_BASE_URL متاحًا
+      setServices(STATIC_SERVICES); // عرض الخدمات الثابتة مباشرة
+      setError('عنوان API غير متوفر. يتم عرض البيانات الافتراضية.');
+      return;
     }
 
-    // دالة لجلب الخدمات من الخادم
     const fetchServices = async () => {
       try {
-        setLoading(true); // ابدأ التحميل
-        setError(null); // مسح أي أخطاء سابقة
-        // إجراء طلب HTTP GET لجلب الخدمات من API
+        setLoading(true);
+        setError(null);
         const response = await axios.get(`${API_BASE_URL}/api/services`);
-        setServices(response.data); // تحديث حالة الخدمات بالبيانات المستلمة
+        setServices(response.data);
       } catch (err) {
-        console.error('Error fetching services:', err); // سجل الخطأ في وحدة التحكم
-        setError('حدث خطأ أثناء جلب الخدمات من الخادم. سيتم عرض قائمة احتياطية.'); // تعيين رسالة خطأ للمستخدم
-        setServices(STATIC_SERVICES); // في حالة حدوث خطأ، استخدم الخدمات الثابتة كبديل
+        console.error('Error fetching services from API:', err);
+        setError('حدث خطأ أثناء جلب الخدمات من الخادم. سيتم عرض قائمة احتياطية.');
+        setServices(STATIC_SERVICES); // العودة إلى الخدمات الثابتة في حالة فشل API
       } finally {
-        setLoading(false); // أوقف التحميل بغض النظر عن النتيجة (نجاح أو فشل)
+        setLoading(false);
       }
     };
 
-    fetchServices(); // استدعاء دالة جلب الخدمات عند تحميل المكون أو تغير API_BASE_URL
-  }, [API_BASE_URL]); // الاعتماد على API_BASE_URL: سيتم إعادة تشغيل useEffect إذا تغير API_BASE_URL
+    fetchServices();
+  }, [API_BASE_URL]);
 
-  // استخدام useMemo لدمج الخدمات (من API أو ثابتة) وتوحيد الفئات
-  // هذا يساعد على تحسين الأداء عن طريق إعادة الحساب فقط عند تغير 'services'
+  // دمج وتوحيد الخدمات (من API أو الثابتة)
   const mergedServices = useMemo(() => {
-    // إذا كانت هناك خدمات تم جلبها من API، استخدمها. وإلا، استخدم STATIC_SERVICES.
-    // ثم قم بتوحيد فئة كل خدمة باستخدام normalizeCategory.
     return (services.length > 0 ? services : STATIC_SERVICES).map(s => ({
       ...s,
       category: normalizeCategory(s.category),
     }));
-  }, [services]); // الاعتماد على 'services': سيتم إعادة الحساب إذا تغيرت الخدمات
+  }, [services]);
 
-  // استخدام useMemo لتصفية الخدمات بناءً على الفئة النشطة ونص البحث
-  // هذا يحسن الأداء عن طريق إعادة التصفية فقط عند تغير البيانات أو عوامل التصفية
+  // تصفية الخدمات بناءً على البحث والفئة
   const filtered = useMemo(() => {
     return mergedServices.filter(s => {
-      // التحقق مما إذا كانت الخدمة تتطابق مع الفئة النشطة
       const matchesCategory =
         activeCategory === 'كل الخدمات' || normalizeCategory(s.category) === activeCategory;
-      // التحقق مما إذا كانت الخدمة تتطابق مع نص البحث
       const matchesSearch =
-        !search || // إذا كان حقل البحث فارغًا، اعتبره متطابقًا
-        (s.name && s.name.toLowerCase().includes(search.trim().toLowerCase())) || // ابحث في اسم الخدمة
-        (s.description && s.description.toLowerCase().includes(search.trim().toLowerCase())); // ابحث في وصف الخدمة
-      return matchesCategory && matchesSearch; // يجب أن تتطابق مع الفئة والبحث
+        !search ||
+        (s.name && s.name.toLowerCase().includes(search.trim().toLowerCase())) ||
+        (s.description && s.description.toLowerCase().includes(search.trim().toLowerCase()));
+      return matchesCategory && matchesSearch;
     });
-  }, [mergedServices, activeCategory, search]); // الاعتمادات: 'mergedServices', 'activeCategory', 'search'
+  }, [mergedServices, activeCategory, search]);
 
-  // عرض حالة التحميل
   if (loading) {
     return (
       <div className="container mx-auto p-8 text-center min-h-screen">
@@ -97,44 +292,39 @@ function ServicesPage() {
     <div className="container mx-auto p-8 min-h-screen">
       <h2 className="text-4xl font-bold text-blue-800 text-center mb-6">الخدمات البلدية</h2>
 
-      {/* قسم الفئات وحقل البحث */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-start">
-        {/* أزرار الفئات */}
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map(cat => (
             <button
-              key={cat} // مفتاح فريد لكل زر فئة
-              onClick={() => setActiveCategory(cat)} // عند النقر، قم بتعيين الفئة النشطة
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition ${
                 activeCategory === cat
-                  ? 'bg-blue-600 text-white shadow' // تصميم الزر النشط
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200' // تصميم الزر غير النشط
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {cat}
             </button>
           ))}
         </div>
-        {/* حقل البحث */}
         <div className="mt-2 md:mt-0 md:ml-auto flex-grow max-w-md">
           <input
-            aria-label="بحث في الخدمات" // تسمية للمساعدات التجميلية
-            placeholder="ابحث عن خدمة..." // نص توضيحي داخل حقل البحث
-            value={search} // القيمة الحالية لحقل البحث
-            onChange={e => setSearch(e.target.value)} // تحديث حالة البحث عند التغيير
+            aria-label="بحث في الخدمات"
+            placeholder="ابحث عن خدمة..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
-      {/* عرض رسالة الخطأ إذا كانت موجودة */}
       {error && (
         <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 rounded p-4 mb-4">
           <strong>تنبيه:</strong> {error}
         </div>
       )}
 
-      {/* عرض الخدمات المفلترة أو رسالة "لا توجد خدمات" */}
       {filtered.length === 0 ? (
         <p className="text-center text-lg text-gray-700">
           لا توجد خدمات تطابق البحث أو الفئة المحددة.
@@ -143,7 +333,7 @@ function ServicesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map(service => (
             <div
-              key={service.id || service.name} // استخدام id أو name كمفتاح فريد للخدمة
+              key={service.id || service.name}
               className="bg-white p-6 rounded-2xl shadow-xl flex flex-col justify-between border border-gray-100"
             >
               <div>
