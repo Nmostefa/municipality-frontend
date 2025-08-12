@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useOutletContext } from 'react-router-dom'; // استيراد useOutletContext
+import { useOutletContext } from 'react-router-dom';
 
 function AnnouncementsPage() {
-  // جلب API_BASE_URL من السياق الذي تم تمريره من App.jsx
-  const { API_BASE_URL } = useOutletContext();
+  const { API_BASE_URL } = useOutletContext() || {};
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,31 +12,27 @@ function AnnouncementsPage() {
     const fetchAnnouncements = async () => {
       try {
         setLoading(true);
-        setError(null); // مسح أي أخطاء سابقة
-        // استخدام API_BASE_URL في طلب الجلب (axios.get)
+        setError(null);
         const response = await axios.get(`${API_BASE_URL}/api/announcements`);
         setAnnouncements(response.data);
       } catch (err) {
-        console.error('Error fetching announcements:', err);
         setError('حدث خطأ أثناء جلب الإعلانات. الرجاء المحاولة لاحقًا.');
       } finally {
         setLoading(false);
       }
     };
 
-    // تأكد من أن API_BASE_URL متاح قبل محاولة الجلب
     if (API_BASE_URL) {
       fetchAnnouncements();
     }
-  }, [API_BASE_URL]); // إضافة API_BASE_URL كاعتماد لـ useEffect
+  }, [API_BASE_URL]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'غير محدد';
     const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     try {
       return new Date(dateString).toLocaleDateString('ar-DZ', options);
-    } catch (e) {
-      console.error("Invalid date string:", dateString, e);
+    } catch {
       return 'تاريخ غير صالح';
     }
   };
@@ -61,14 +56,17 @@ function AnnouncementsPage() {
   }
 
   return (
-    <div className="py-8 px-4"> {/* أضف بعض التبطين الأفقي */}
+    <div className="py-8 px-4">
       <h2 className="text-3xl font-semibold text-gray-800 mb-8 text-center">الإعلانات والمناقصات</h2>
       {announcements.length === 0 ? (
         <p className="text-xl text-gray-600 text-center">لا توجد إعلانات أو مناقصات متاحة حاليًا.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"> {/* زيادة الفجوة بين العناصر */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {announcements.map((announcement) => (
-            <div key={announcement.id} className="bg-white p-6 rounded-lg shadow-xl flex flex-col transition-transform transform hover:scale-105 duration-300"> {/* إضافة ظل أكبر وتأثير عند المرور بالماوس */}
+            <div
+              key={announcement.id}
+              className="bg-white p-6 rounded-lg shadow-xl flex flex-col transition-transform transform hover:scale-105 duration-300"
+            >
               {announcement.image_url && (
                 <img
                   src={announcement.image_url}
@@ -76,10 +74,10 @@ function AnnouncementsPage() {
                   className="w-full h-48 object-cover rounded-md mb-4 border border-gray-200"
                 />
               )}
-              <h3 className="text-2xl font-extrabold text-blue-800 mb-3 leading-tight">{announcement.title}</h3> {/* خط أكبر وأكثر جرأة */}
-              <p className="text-gray-700 mb-4 text-base flex-grow">{announcement.content}</p> {/* حجم خط أساسي */}
+              <h3 className="text-2xl font-extrabold text-blue-800 mb-3 leading-tight">{announcement.title}</h3>
+              <p className="text-gray-700 mb-4 text-base flex-grow">{announcement.content}</p>
 
-              <div className="mt-auto pt-4 border-t border-gray-200"> {/* فاصل علوي للمعلومات الإضافية */}
+              <div className="mt-auto pt-4 border-t border-gray-200">
                 {announcement.announcement_type && (
                   <p className="text-gray-600 text-sm mb-1">
                     <span className="font-semibold text-blue-700">النوع:</span>{' '}
